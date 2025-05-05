@@ -15,7 +15,7 @@
     "llm": {
         "model_type": "openai",
         "openai_model_name": "gpt-4o-mini",
-        "ollama_model_name": "llama3.1",
+        "ollama_model_name": "deepseek-r1:14b",
         "ollama_api_url": "http://localhost:11434/api/chat"
     },
     "report_types": [

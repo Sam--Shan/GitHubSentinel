@@ -56,63 +56,123 @@ def update_model_list(model_type):
         return gr.Dropdown(choices=["llama3.1", "gemma2:2b", "qwen2:7b"], label="选择模型")
 
 
-# 创建 Gradio 界面
-with gr.Blocks(title="GitHubSentinel") as demo:
+# 创建 Gradio 界面（应用现代风格主题）
+with gr.Blocks(
+    title="GitHubSentinel",
+    theme=gr.themes.Soft(
+        primary_hue="blue",
+        secondary_hue="cyan",
+        font=[gr.themes.GoogleFont("Open Sans")]
+    )
+) as demo:
     # 创建 GitHub 项目进展 Tab
     with gr.Tab("GitHub 项目进展"):
-        gr.Markdown("## GitHub 项目进展")  # 添加小标题
+        gr.Markdown("## 📊 GitHub 项目进展分析")  # 更新为更生动的标题
 
-        # 创建 Radio 组件
-        model_type = gr.Radio(["openai", "ollama"], label="模型类型", info="使用 OpenAI GPT API 或 Ollama 私有化模型服务")
+        # 模型选择部分
+        with gr.Row():
+            with gr.Column(min_width=300):
+                model_type = gr.Radio(
+                    ["openai", "ollama"],
+                    label="模型平台",
+                    info="选择使用的AI模型平台",
+                    interactive=True
+                )
+            with gr.Column(min_width=300):
+                model_name = gr.Dropdown(
+                    choices=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
+                    label="模型版本",
+                    interactive=True
+                )
 
-        # 创建 Dropdown 组件
-        model_name = gr.Dropdown(choices=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], label="选择模型")
+        # 参数配置部分
+        with gr.Row():
+            with gr.Column(min_width=300):
+                subscription_list = gr.Dropdown(
+                    subscription_manager.list_subscriptions(),
+                    label="订阅项目",
+                    info="选择已订阅的GitHub仓库",
+                    interactive=True
+                )
+            with gr.Column(min_width=300):
+                days = gr.Slider(
+                    value=2,
+                    minimum=1,
+                    maximum=7,
+                    step=1,
+                    label="分析周期（天）",
+                    info="设置要分析的时间范围",
+                    interactive=True
+                )
 
-        # 创建订阅列表的 Dropdown 组件
-        subscription_list = gr.Dropdown(subscription_manager.list_subscriptions(), label="订阅列表", info="已订阅GitHub项目")
-
-        # 创建 Slider 组件
-        days = gr.Slider(value=2, minimum=1, maximum=7, step=1, label="报告周期", info="生成项目过去一段时间进展，单位：天")
-
-        # 使用 radio 组件的值来更新 dropdown 组件的选项
+        # 动态更新模型列表
         model_type.change(fn=update_model_list, inputs=model_type, outputs=model_name)
 
-        # 创建按钮来生成报告
-        button = gr.Button("生成报告")
+        # 操作按钮
+        with gr.Row():
+            btn_generate = gr.Button("🚀 生成分析报告", variant="primary", scale=2)
+            btn_clear = gr.Button("🔄 清空输入", variant="secondary")
 
-        # 设置输出组件
-        markdown_output = gr.Markdown()
-        file_output = gr.File(label="下载报告")
+        # 输出展示
+        with gr.Accordion("实时预览", open=True):
+            markdown_output = gr.Markdown()
+        with gr.Row():
+            file_output = gr.File(label="下载完整报告", interactive=False)
 
-        # 将按钮点击事件与导出函数绑定
-        button.click(generate_github_report, inputs=[model_type, model_name, subscription_list, days], outputs=[markdown_output, file_output])
+        # 绑定事件
+        btn_generate.click(
+            generate_github_report,
+            inputs=[model_type, model_name, subscription_list, days],
+            outputs=[markdown_output, file_output]
+        )
+        btn_clear.click(lambda: [None, None], outputs=[markdown_output, file_output])
 
     # 创建 Hacker News 热点话题 Tab
     with gr.Tab("Hacker News 热点话题"):
-        gr.Markdown("## Hacker News 热点话题")  # 添加小标题
+        gr.Markdown("## 🔥 实时热点话题分析")
 
-        # 创建 Radio 组件
-        model_type = gr.Radio(["openai", "ollama"], label="模型类型", info="使用 OpenAI GPT API 或 Ollama 私有化模型服务")
+        # 模型选择部分
+        with gr.Row():
+            with gr.Column(min_width=300):
+                hn_model_type = gr.Radio(
+                    ["openai", "ollama"],
+                    label="模型平台",
+                    value="openai",
+                    interactive=True
+                )
+            with gr.Column(min_width=300):
+                hn_model_name = gr.Dropdown(
+                    choices=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
+                    label="模型版本",
+                    value="gpt-4o",
+                    interactive=True
+                )
 
-        # 创建 Dropdown 组件
-        model_name = gr.Dropdown(choices=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], label="选择模型")
+        # 动态更新模型列表
+        hn_model_type.change(fn=update_model_list, inputs=hn_model_type, outputs=hn_model_name)
 
-        # 使用 radio 组件的值来更新 dropdown 组件的选项
-        model_type.change(fn=update_model_list, inputs=model_type, outputs=model_name)
+        # 操作按钮
+        with gr.Row():
+            hn_btn_generate = gr.Button("🚀 生成热点分析", variant="primary")
+            hn_btn_clear = gr.Button("🔄 清空输入", variant="secondary")
 
-        # 创建按钮来生成报告
-        button = gr.Button("生成最新热点话题")
+        # 输出展示
+        with gr.Accordion("分析结果预览", open=True):
+            hn_markdown_output = gr.Markdown()
+        with gr.Row():
+            hn_file_output = gr.File(label="下载完整报告", interactive=False)
 
-        # 设置输出组件
-        markdown_output = gr.Markdown()
-        file_output = gr.File(label="下载报告")
-
-        # 将按钮点击事件与导出函数绑定
-        button.click(generate_hn_hour_topic, inputs=[model_type, model_name,], outputs=[markdown_output, file_output])
-
-
+        # 绑定事件
+        hn_btn_generate.click(
+            generate_hn_hour_topic,
+            inputs=[hn_model_type, hn_model_name],
+            outputs=[hn_markdown_output, hn_file_output]
+        )
+        hn_btn_clear.click(lambda: [None, None], outputs=[hn_markdown_output, hn_file_output])
 
 if __name__ == "__main__":
-    demo.launch(share=True, server_name="0.0.0.0")  # 启动界面并设置为公共可访问
-    # 可选带有用户认证的启动方式
-    # demo.launch(share=True, server_name="0.0.0.0", auth=("django", "1234"))
+    demo.launch(
+        server_name="0.0.0.0",
+        share=True,
+        favicon_path="https://www.svgrepo.com/show/512459/github-142.svg"
+    )

@@ -29,30 +29,38 @@ class LLM:
         :param user_content: 用户提交的原始内容
         :return: 结构化技术报告
         """
-        # 稳定性增强措施
-        required_sections = ["新增功能", "主要改进", "修复问题"]
-        validation_note = "\n警告：检测到输入结构不完整，请补充[新增功能]、[主要改进]、[修复问题]中的缺失部分"
-        
-        # 补充稳定性提示词模板
-        optimized_prompt = f"""{system_prompt}
-        
-    [报告规范]
-    1. 必须包含的章节：新增功能、主要改进、修复问题
-    2. 每个技术点需标注：
-    - 所属模块（前端/后端/测试）
-    - 关联版本号（如v2.3.1→v2.4.0）
-    - 技术变更类型（功能/优化/修复）
-    3. 不确定信息处理：
-    !时间区间模糊时使用「版本待确认」标注
-    !存在矛盾描述时保留原始提交记录
-    4. 格式要求：
-    → 日期格式ISO 8601（YYYY-MM-DD）
-    → 技术名词首字母大写（如Azure Cosmos）
-    → 禁止使用非标准符号（❌/✅等）
+        # GitHub项目迭代特征强化模板
+        iteration_template = """
+    [GitHub迭代规范]
+    1. 必须包含的迭代要素：
+    ► 功能开发（Feature commits）
+    ► 问题修复（Issue fixes）
+    ► 文档更新（Docs update）
+    ► 测试验证（Test cases）
+    ► 发布说明（Release notes）
 
-    [输入验证]
-    {validation_note if not all(section in user_content for section in required_sections) else ""}
+    2. 技术特征标注：
+    ⚙️ 关联Issue编号（如#192）
+    ⚙️ 版本跨度标记（v1.2.0→v1.3.0）
+    ⚙️ 变更分类标识：[Core]/[API]/[UI]
+    ⚙️ CI/CD管道状态（成功/失败）
+
+    3. 社区交互要素：
+    👥 涉及贡献者数量
+    👥 关联讨论帖（Discussion link）
+    👥 PR审核周期（小时数）
+    👥 Issue响应时效
+
+    [异常处理规则]
+    ! 缺失commit信息时标注「迭代记录不完整」
+    ! 版本冲突时保留原始git记录
+    ! 未关闭的Issue添加「待跟进」标记
     """
+
+        optimized_prompt = f"""{system_prompt}
+    {iteration_template}
+    """
+
 
         messages = [
             {"role": "system", "content": optimized_prompt},

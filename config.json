@@ -1,6 +1,6 @@
 {
     "github": {
-        "token": "your_github_token",
+        "token": "xxx",
         "subscriptions_file": "subscriptions.json",
         "progress_frequency_days": 1,
         "progress_execution_time": "08:00"
@@ -13,7 +13,7 @@
         "to": "test@zaijidata.com"
     },
     "llm": {
-        "model_type": "ollama",
+        "model_type": "openai",
         "openai_model_name": "gpt-4o-mini",
         "ollama_model_name": "llama3.1",
         "ollama_api_url": "http://localhost:11434/api/chat"

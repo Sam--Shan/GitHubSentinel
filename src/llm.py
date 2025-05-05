@@ -12,6 +12,7 @@ class LLM:
         """
         self.config = config
         self.model = config.llm_model_type.lower()  # 获取模型类型并转换为小写
+        print(self.model)
         if self.model == "openai":
             self.client = OpenAI()  # 创建OpenAI客户端实例
         elif self.model == "ollama":
@@ -22,24 +23,49 @@ class LLM:
 
     def generate_report(self, system_prompt, user_content):
         """
-        生成报告，根据配置选择不同的模型来处理请求。
-
-        :param system_prompt: 系统提示信息，包含上下文和规则。
-        :param user_content: 用户提供的内容，通常是Markdown格式的文本。
-        :return: 生成的报告内容。
+        生成技术报告，包含输入验证和提示词优化逻辑
+        
+        :param system_prompt: 基础系统提示词
+        :param user_content: 用户提交的原始内容
+        :return: 结构化技术报告
         """
+        # 稳定性增强措施
+        required_sections = ["新增功能", "主要改进", "修复问题"]
+        validation_note = "\n警告：检测到输入结构不完整，请补充[新增功能]、[主要改进]、[修复问题]中的缺失部分"
+        
+        # 补充稳定性提示词模板
+        optimized_prompt = f"""{system_prompt}
+        
+    [报告规范]
+    1. 必须包含的章节：新增功能、主要改进、修复问题
+    2. 每个技术点需标注：
+    - 所属模块（前端/后端/测试）
+    - 关联版本号（如v2.3.1→v2.4.0）
+    - 技术变更类型（功能/优化/修复）
+    3. 不确定信息处理：
+    !时间区间模糊时使用「版本待确认」标注
+    !存在矛盾描述时保留原始提交记录
+    4. 格式要求：
+    → 日期格式ISO 8601（YYYY-MM-DD）
+    → 技术名词首字母大写（如Azure Cosmos）
+    → 禁止使用非标准符号（❌/✅等）
+
+    [输入验证]
+    {validation_note if not all(section in user_content for section in required_sections) else ""}
+    """
+
         messages = [
-            {"role": "system", "content": system_prompt},
+            {"role": "system", "content": optimized_prompt},
             {"role": "user", "content": user_content},
         ]
 
-        # 根据选择的模型调用相应的生成报告方法
+        # 模型分发逻辑
         if self.model == "openai":
             return self._generate_report_openai(messages)
         elif self.model == "ollama":
             return self._generate_report_ollama(messages)
         else:
-            raise ValueError(f"不支持的模型类型: {self.model}")
+            raise ValueError(f"Unsupported model: {self.model}")
 
     def _generate_report_openai(self, messages):
         """
